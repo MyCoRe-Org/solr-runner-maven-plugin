@@ -26,11 +26,13 @@ public class CopySOLRHomeMojo extends AbstractSolrMojo {
 
     protected void copyHome() throws MojoFailureException {
         try {
+            Path solrHome = getSOLRHome();
+            getLog().info("Copy solr home to " + solrHome.toAbsolutePath().toString());
             Files.walkFileTree(getSOLRHomeTemplate(), new SimpleFileVisitor<Path>() {
                 @Override public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
                     throws IOException {
                     String relativeName = getSOLRHomeTemplate().relativize(dir).toString();
-                    Path newDirectoryPath = getSOLRHome().resolve(relativeName);
+                    Path newDirectoryPath = solrHome.resolve(relativeName);
                     if (!Files.exists(newDirectoryPath)) {
                         Files.createDirectories(newDirectoryPath);
                     }

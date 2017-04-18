@@ -13,6 +13,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -134,7 +135,15 @@ abstract class AbstractSolrMojo extends AbstractMojo {
     }
 
     private Path getSOLRExecutablePath() throws MojoFailureException {
-        return getSOLRPath().resolve("bin/").resolve("solr");
+        Path solr = getSOLRPath().resolve("bin/");
+
+        if(System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows")){
+            solr = solr.resolve("solr.cmd");
+        } else {
+            solr = solr.resolve("solr");
+        }
+
+        return solr;
     }
 
     private Path getZipPath() throws MojoFailureException {

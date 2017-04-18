@@ -1,8 +1,6 @@
 package de.vzg.maven.tools;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
@@ -10,8 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
-
-import org.apache.maven.plugin.logging.Log;
 
 public class SOLRRunner {
 
@@ -112,40 +108,40 @@ public class SOLRRunner {
         return parameters;
     }
 
-    public int start(Log log) throws IOException, InterruptedException {
-        Set<PosixFilePermission> filePermissions = fixPermissions();
+    public int start() throws IOException, InterruptedException {
+        fixPermissions();
 
-        Files.setPosixFilePermissions(executable, filePermissions);
-        Process solrProccess = new ProcessBuilder(buildParameterList("start")).start();
-        return waitAndOutput(log, solrProccess);
+        Process solrProccess = new ProcessBuilder(buildParameterList("start")).redirectErrorStream(true).inheritIO()
+            .start();
+        return waitAndOutput(solrProccess);
     }
 
-    private int waitAndOutput(Log log, Process solrProccess) throws IOException, InterruptedException {
+    private int waitAndOutput(Process solrProccess) throws IOException, InterruptedException {
         int returnValue;
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(solrProccess.getInputStream()))) {
-            returnValue = solrProccess.waitFor();
-            br.lines().forEach(log::info);
-        }
-
+        returnValue = solrProccess.waitFor();
         return returnValue;
     }
 
-    public int stop(Log log) throws IOException, InterruptedException {
-        Set<PosixFilePermission> filePermissions = fixPermissions();
+    public int stop() throws IOException, InterruptedException {
+        fixPermissions();
 
-        Files.setPosixFilePermissions(executable, filePermissions);
-        Process solrProccess = new ProcessBuilder(buildParameterList("stop")).start();
-        return waitAndOutput(log, solrProccess);
+        Process solrProccess = new ProcessBuilder(buildParameterList("stop")).redirectErrorStream(true).inheritIO()
+            .start();
+        return waitAndOutput(solrProccess);
     }
 
-    public Set<PosixFilePermission> fixPermissions() throws IOException {
-        Set<PosixFilePermission> filePermissions = Files.getPosixFilePermissions(executable);
-        Stream<PosixFilePermission> requiredPermissions = Stream
-            .of(PosixFilePermission.OWNER_EXECUTE, PosixFilePermission.GROUP_EXECUTE);
+    public void fixPermissions() throws IOException {
+        try {
+            Set<PosixFilePermission> filePermissions = Files.getPosixFilePermissions(executable);
+            Stream<PosixFilePermission> requiredPermissions = Stream
+                .of(PosixFilePermission.OWNER_EXECUTE, PosixFilePermission.GROUP_EXECUTE);
 
-        requiredPermissions.forEach(requiredPermission -> {
-            filePermissions.add(requiredPermission);
-        });
-        return filePermissions;
+            requiredPermissions.forEach(requiredPermission -> {
+                filePermissions.add(requiredPermission);
+            });
+            Files.setPosixFilePermissions(executable, filePermissions);
+        } catch (UnsupportedOperationException e) {
+            // windows -.-
+        }
     }
 }
