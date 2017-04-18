@@ -2,7 +2,7 @@
 
 This Plugin is just a wrapper for SOLR and some extra mojos. Works with SOLR 6.
 
-##solr-runner:start & solr-runner:stop
+## solr-runner:start & solr-runner:stop
 Downloads SOLR to local repository and extract it, if it is not present already(in repository).
 
 ```
