@@ -28,6 +28,17 @@
   <artifactId>solr-runner-maven-plugin</artifactId>
   <version>1.0-SNAPSHOT</version>
   <packaging>maven-plugin</packaging>
+
+
+  <issueManagement>
+    <url>https://github.com/paschty/solr-runner-maven-plugin/issues</url>
+    <system>GitHub Issues</system>
+  </issueManagement>
+  <scm>
+    <url>https://github.com/paschty/solr-runner-maven-plugin</url>
+    <connection>scm:git:https://github.com/paschty/solr-runner-maven-plugin.git</connection>
+    <developerConnection>scm:git:https://github.com/paschty/solr-runner-maven-plugin.git</developerConnection>
+  </scm>
   <dependencies>
     <dependency>
       <groupId>org.apache.maven.plugin-tools</groupId>
