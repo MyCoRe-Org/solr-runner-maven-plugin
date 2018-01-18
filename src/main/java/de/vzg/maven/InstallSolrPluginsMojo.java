@@ -13,11 +13,10 @@ import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
-@Mojo(name = "installSolrPlugins",  defaultPhase = LifecyclePhase.GENERATE_RESOURCES)
+@Mojo(name = "installSolrPlugins")
 public class InstallSolrPluginsMojo extends AbstractSolrMojo {
 
     @Parameter(property = "pluginCoreMappings", required = true)
