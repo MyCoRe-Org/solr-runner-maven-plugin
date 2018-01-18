@@ -6,9 +6,10 @@ import java.io.IOException;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 
-@Mojo(name = "stop")
+@Mojo(name = "stop", defaultPhase = LifecyclePhase.GENERATE_RESOURCES)
 public class StopSOLRMojo extends AbstractSolrMojo {
 
     @Override
