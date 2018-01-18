@@ -7,7 +7,7 @@ Downloads SOLR to local repository and extract it, if it is not present already(
 
 ```
 <plugin>
-  <groupId>de.vzg.maven</groupId>
+  <groupId>org.mycore.plugins</groupId>
     <artifactId>solr-runner-maven-plugin</artifactId>
     <version>1.0-SNAPSHOT</version>
     <configuration>
@@ -31,7 +31,7 @@ Can be used to copy SOLR home in your project to the real SOLR home.
 
 ```
 <plugin>
-  <groupId>de.vzg.maven</groupId>
+  <groupId>org.mycore.plugins</groupId>
     <artifactId>solr-runner-maven-plugin</artifactId>
     <version>1.0-SNAPSHOT</version>
     <configuration>      
@@ -49,7 +49,7 @@ This can be used to install Plugins to specific cores in your SOLR home.
 You need to define a plugin dependency.
 ```
 <plugin>
-  <groupId>de.vzg.maven</groupId>
+  <groupId>org.mycore.plugins</groupId>
     <artifactId>solr-runner-maven-plugin</artifactId>
     <version>1.0-SNAPSHOT</version>
     <dependencies>
