@@ -19,10 +19,7 @@
   ~  59 Temple Place - Suite 330, Boston, MA  02111-1307 USA
   ~
   -->
-
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.mycore</groupId>
@@ -34,26 +31,14 @@
   <version>1.0-SNAPSHOT</version>
   <packaging>maven-plugin</packaging>
   <issueManagement>
-    <url>https://github.com/MyCoRe-Org/solr-runner-maven-plugin/issues</url>
     <system>GitHub Issues</system>
+    <url>https://github.com/MyCoRe-Org/solr-runner-maven-plugin/issues</url>
   </issueManagement>
   <scm>
-    <url>https://github.com/MyCoRe-Org/solr-runner-maven-plugin</url>
     <connection>scm:git:https://github.com/MyCoRe-Org/solr-runner-maven-plugin.git</connection>
     <developerConnection>scm:git:https://github.com/MyCoRe-Org/solr-runner-maven-plugin.git</developerConnection>
+    <url>https://github.com/MyCoRe-Org/solr-runner-maven-plugin</url>
   </scm>
-  <dependencies>
-    <dependency>
-      <groupId>org.apache.maven.plugin-tools</groupId>
-      <artifactId>maven-plugin-annotations</artifactId>
-      <version>3.3</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.maven</groupId>
-      <artifactId>maven-plugin-api</artifactId>
-      <version>3.3.9</version>
-    </dependency>
-  </dependencies>
   <build>
     <plugins>
       <plugin>
@@ -83,4 +68,29 @@
       </plugin>
     </plugins>
   </build>
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.maven</groupId>
+      <artifactId>maven-plugin-api</artifactId>
+      <version>3.3.9</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.maven.plugin-tools</groupId>
+      <artifactId>maven-plugin-annotations</artifactId>
+      <version>3.3</version>
+    </dependency>
+  </dependencies>
+  <developers>
+    <developer>
+      <id>mcrshofm</id>
+      <name>Sebastian Hofmann</name>
+      <email>vo62xat (at) uni-jena.de</email>
+      <organization>Friedrich-Schiller-Universität Jena, Thüringer Universitäts- und Landesbibliothek</organization>
+      <organizationUrl>http://www.thulb.uni-jena.de/</organizationUrl>
+      <roles>
+        <role>developer</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
+  </developers>
 </project>
