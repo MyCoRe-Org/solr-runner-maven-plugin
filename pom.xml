@@ -80,6 +80,11 @@
       <artifactId>maven-plugin-annotations</artifactId>
       <version>3.3</version>
     </dependency>
+    <dependency>
+      <groupId>org.eclipse.jgit</groupId>
+      <artifactId>org.eclipse.jgit</artifactId>
+      <version>4.1.1.201511131810-r</version>
+    </dependency>
   </dependencies>
   <developers>
     <developer>

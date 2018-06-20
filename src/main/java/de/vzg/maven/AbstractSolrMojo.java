@@ -32,14 +32,13 @@ abstract class AbstractSolrMojo extends AbstractMojo {
     @Parameter(property = "solrMirror", defaultValue = "http://apache.mirror.iphh.net/lucene/solr/")
     private URL solrMirrorURL;
 
-    @Parameter(property = "solrVersion", defaultValue = "6.5.0")
+    @Parameter(property = "solrVersion", defaultValue = "7.3.1")
     private String solrVersionString;
 
     @Parameter(property = "solrHome", required = false)
     private File solrHome;
 
-    @Parameter(property = "solrHome", required = true, defaultValue = "8983")
-    private Integer solrPort;
+    @Parameter(property = "solrPort", required = true, defaultValue = "8983") protected Integer solrPort;
 
     protected void setUpSolr() throws MojoFailureException {
         if (!isSOLRFolderExisting()) {
@@ -126,7 +125,6 @@ abstract class AbstractSolrMojo extends AbstractMojo {
 
         solrRunner.setForeground(false);
         solrRunner.setSolrHome(this.getSOLRHome().toString());
-        solrRunner.setPort(this.solrPort);
         return solrRunner;
     }
 
@@ -150,7 +148,7 @@ abstract class AbstractSolrMojo extends AbstractMojo {
         return getLocalRepoPath().resolve(getSOLRZipFileName());
     }
 
-    private Path getSOLRPath() throws MojoFailureException {
+    public Path getSOLRPath() throws MojoFailureException {
         return getLocalRepoPath().resolve(getSOLRFolderName());
     }
 
@@ -162,7 +160,7 @@ abstract class AbstractSolrMojo extends AbstractMojo {
         return "solr-" + solrVersionString;
     }
 
-    private Path getLocalRepoPath() throws MojoFailureException {
+    public Path getLocalRepoPath() throws MojoFailureException {
         try {
             return Paths.get(new URL(localRepository.getUrl()).toURI());
         } catch (MalformedURLException | URISyntaxException e) {

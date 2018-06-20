@@ -5,8 +5,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class SOLRRunner {
@@ -72,12 +74,12 @@ public class SOLRRunner {
         this.noPrompt = noPrompt;
     }
 
-    protected List<String> buildParameterList(String operation) {
+    protected List<String> buildParameterList(String... operation) {
         ArrayList<String> parameters = new ArrayList<>();
 
         parameters.add(this.executable.toString());
 
-        parameters.add(operation);
+        parameters.addAll(Arrays.stream(operation).collect(Collectors.toList()));
 
         if (isForeground()) {
             parameters.add("-f");
@@ -106,6 +108,20 @@ public class SOLRRunner {
         }
 
         return parameters;
+    }
+
+    public int installCore(String coreName, String configSet) throws IOException, InterruptedException {
+        fixPermissions();
+
+        final List<String> createCoreParameterList = buildParameterList("create", "-d", configSet, "-c", coreName);
+
+        createCoreParameterList.remove("-noprompt");
+
+        Process solrProccess = new ProcessBuilder(createCoreParameterList)
+            .redirectErrorStream(true)
+            .inheritIO()
+            .start();
+        return waitAndOutput(solrProccess);
     }
 
     public int start() throws IOException, InterruptedException {

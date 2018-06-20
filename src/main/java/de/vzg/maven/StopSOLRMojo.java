@@ -16,6 +16,8 @@ public class StopSOLRMojo extends AbstractSolrMojo {
         setUpSolr();
         try {
             SOLRRunner runner = buildRunner();
+            runner.setPort(this.solrPort);
+
             if (runner.stop() != 0) {
                 throw new MojoExecutionException("Solr command did not return 0. See Log for errors.");
             }
