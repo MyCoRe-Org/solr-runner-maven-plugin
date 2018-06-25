@@ -23,8 +23,8 @@ import org.eclipse.jgit.transport.Transport;
 
 import com.jcraft.jsch.Session;
 
-@Mojo(name = "installCoreTemplate")
-public class InstallCoreTemplateMojo extends AbstractSolrMojo {
+@Mojo(name = "installConfigSet")
+public class InstallConfigSet extends AbstractSolrMojo {
 
     @Parameter(property = "gitRepository", required = true)
     private String gitRepository;
@@ -32,12 +32,9 @@ public class InstallCoreTemplateMojo extends AbstractSolrMojo {
     @Parameter(property = "configSetName", required = true)
     private String configSetName;
 
-    @Parameter(property = "coreName", required = true)
-    private String coreName;
-
 
     private Path getGitRepositoryPath() throws MojoFailureException {
-        return getSOLRPath().resolve("server/solr/configsets/").resolve(configSetName);
+        return getSOLRHome().resolve("configsets/").resolve(configSetName);
     }
 
     private void checkoutOrUpdate() throws MojoFailureException {
@@ -83,10 +80,5 @@ public class InstallCoreTemplateMojo extends AbstractSolrMojo {
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         checkoutOrUpdate();
-        try {
-           buildRunner().installCore(coreName, configSetName);
-        } catch (IOException|InterruptedException e) {
-            throw new MojoExecutionException("Error while install solr core " + coreName, e);
-        }
     }
 }
