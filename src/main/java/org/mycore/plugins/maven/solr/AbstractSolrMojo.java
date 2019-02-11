@@ -18,8 +18,6 @@
 
 package org.mycore.plugins.maven.solr;
 
-import org.mycore.plugins.maven.solr.tools.SOLRRunner;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,6 +39,7 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.mycore.plugins.maven.solr.tools.SOLRRunner;
 
 abstract class AbstractSolrMojo extends AbstractMojo {
 
@@ -59,7 +58,7 @@ abstract class AbstractSolrMojo extends AbstractMojo {
     @Parameter(property = "solrPort", required = true, defaultValue = "8983") protected Integer solrPort;
 
     protected void setUpSolr() throws MojoFailureException {
-        if (!isSOLRFolderExisting()) {
+        if (!isSOLRExecutableExisting()) {
             if (!isSOLRZipExisting()) {
                 getLog().debug("Download solr-zip because it does not exists!");
                 downloadZip();
@@ -97,14 +96,15 @@ abstract class AbstractSolrMojo extends AbstractMojo {
         return Files.exists(solrZipFilePath);
     }
 
-    protected boolean isSOLRFolderExisting() throws MojoFailureException {
-        return Files.exists(getSOLRPath());
+    protected boolean isSOLRExecutableExisting() throws MojoFailureException {
+        return Files.exists(getSOLRExecutablePath());
     }
 
     protected void extractSOLRZip() throws MojoFailureException {
         Log log = getLog();
         Path solrPath = getSOLRPath();
         String solrFolderName = getSOLRFolderName();
+        log.info("Extracting " + getZipPath() + " to " + solrPath + " \u2026");
 
         try (ZipFile zipFile = new ZipFile(getZipPath().toFile())) {
             List<? extends ZipEntry> zipEntries = zipFile.stream().collect(Collectors.toList());
