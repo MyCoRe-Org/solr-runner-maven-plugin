@@ -57,6 +57,8 @@ abstract class AbstractSolrMojo extends AbstractMojo {
 
     @Parameter(property = "solrPort", required = true, defaultValue = "8983") protected Integer solrPort;
 
+    @Parameter(property = "force", required = false, defaultValue = "false") protected Boolean force;
+
     protected void setUpSolr() throws MojoFailureException {
         if (!isSOLRExecutableExisting()) {
             if (!isSOLRZipExisting()) {
@@ -140,7 +142,7 @@ abstract class AbstractSolrMojo extends AbstractMojo {
 
     protected SOLRRunner buildRunner() throws MojoFailureException {
         SOLRRunner solrRunner = new SOLRRunner(getSOLRExecutablePath());
-
+        solrRunner.setForce(force);
         solrRunner.setForeground(false);
         solrRunner.setSolrHome(this.getSOLRHome().toString());
         return solrRunner;
