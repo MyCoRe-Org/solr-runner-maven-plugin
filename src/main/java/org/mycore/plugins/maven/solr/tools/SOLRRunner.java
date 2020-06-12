@@ -48,6 +48,8 @@ public class SOLRRunner {
     // -noprompt flag
     private boolean noPrompt = true;
 
+    private boolean force = false;
+
     public SOLRRunner(Path executable) {
         this.executable = executable;
     }
@@ -92,6 +94,10 @@ public class SOLRRunner {
         this.noPrompt = noPrompt;
     }
 
+    public void setForce(boolean force) {
+        this.force = force;
+    }
+
     protected List<String> buildParameterList(String... operation) {
         ArrayList<String> parameters = new ArrayList<>();
 
@@ -123,6 +129,10 @@ public class SOLRRunner {
 
         if (noPrompt) {
             parameters.add("-noprompt");
+        }
+
+        if (force) {
+            parameters.add("-force");
         }
 
         return parameters;
