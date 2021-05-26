@@ -1,6 +1,13 @@
 # solr-runner-maven-plugin
 
-This Plugin is just a wrapper for SOLR and some extra mojos. Works with SOLR 6.
+This Plugin is just a wrapper for SOLR and some extra mojos. It downloads SOLR to the local repository 
+`~/.m2/repository/solr-7.7.3/`. It will be started from there but the Path to the solrHome will be changed with the 
+solr -s parameter. 
+```
+~/.m2/repository/solr-7.7.3/bin/solr start -p 8983 -s ~/my-solr-location
+```
+
+Works with SOLR 6, 7, 8.
 
 ## solr-runner:start & solr-runner:stop
 Downloads SOLR to local repository and extract it, if it is not present already(in repository).
@@ -12,31 +19,31 @@ Downloads SOLR to local repository and extract it, if it is not present already(
     <version>1.0-SNAPSHOT</version>
     <configuration>
       <!-- You can specify a custom SOLR mirror -->
-      <solrMirror>http://apache.mirror.iphh.net/lucene/solr/</solrMirror>
+      <solrMirrorURL>http://apache.mirror.iphh.net/lucene/solr/</solrMirrorURL>
       
       <!-- You can specify a custom SOLR version -->
-      <solrVersion>6.5.0</solrVersion>
+      <solrVersionString>7.7.3</solrVersionString>
       
       <!-- You can specify a custom SOLR port -->
       <solrPort>8983</solrPort>
       
       <!-- You have to specify the SOLR home with your configuration. (see also copyHome) -->
-      <solrHome>${project.basedir}/solr</solrHome>
+      <solrHome>${user.home}/solr</solrHome>
     </configuration>
 </plugin>
 ``` 
 
 ## solr-runner:copyHome
-Can be used to copy SOLR home in your project to the real SOLR home.
+Can be used to copy SOLR home template from your project files to solr home location to keep your project files clean.
 
 ```
 <plugin>
   <groupId>org.mycore.plugins</groupId>
     <artifactId>solr-runner-maven-plugin</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.2-SNAPSHOT</version>
     <configuration>      
       <!-- You have to specify the SOLR home with your configuration. -->
-      <solrHome>${project.basedir}/solr</solrHome>
+      <solrHome>${user.home}/solr</solrHome>
       
       <!-- This is my "template" solr-home which will be copied to solrHome -->
       <solrHomeTemplate>${project.basedir}/src/main/resources/solrHome</solrHomeTemplate>
@@ -51,7 +58,7 @@ You need to define a plugin dependency.
 <plugin>
   <groupId>org.mycore.plugins</groupId>
     <artifactId>solr-runner-maven-plugin</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.2-SNAPSHOT</version>
     <dependencies>
        <dependency>
           <groupId>my.amazing</groupId>
@@ -62,7 +69,7 @@ You need to define a plugin dependency.
     
     <configuration>      
       <!-- You have to specify the SOLR home with your configuration. -->
-      <solrHome>${project.basedir}/solr</solrHome>
+      <solrHome>${user.home}/solr</solrHome>
       
       ...
     
