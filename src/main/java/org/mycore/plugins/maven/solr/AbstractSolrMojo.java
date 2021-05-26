@@ -52,6 +52,9 @@ abstract class AbstractSolrMojo extends AbstractMojo {
     @Parameter(property = "solrVersion", defaultValue = "7.3.1")
     private String solrVersionString;
 
+    @Parameter(property = "additionalVMParam", defaultValue = "-XX:+IgnoreUnrecognizedVMOptions")
+    private String additionalVMParam;
+
     @Parameter(property = "solrHome", required = false)
     private File solrHome;
 
@@ -143,6 +146,7 @@ abstract class AbstractSolrMojo extends AbstractMojo {
     protected SOLRRunner buildRunner() throws MojoFailureException {
         SOLRRunner solrRunner = new SOLRRunner(getSOLRExecutablePath());
         solrRunner.setForce(force);
+        solrRunner.setAdditionalVMParams(additionalVMParam);
         solrRunner.setForeground(false);
         solrRunner.setSolrHome(this.getSOLRHome().toString());
         return solrRunner;

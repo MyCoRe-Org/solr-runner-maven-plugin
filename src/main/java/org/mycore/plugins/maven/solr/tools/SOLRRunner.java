@@ -45,6 +45,9 @@ public class SOLRRunner {
     // -m param
     private String memory;
 
+    // -a param
+    private String additionalVMParams;
+
     // -noprompt flag
     private boolean noPrompt = true;
 
@@ -127,6 +130,12 @@ public class SOLRRunner {
             parameters.add(memory);
         }
 
+        String additionalVMParams = getAdditionalVMParams();
+        if (additionalVMParams != null) {
+            parameters.add("-a");
+            parameters.add(additionalVMParams);
+        }
+
         if (noPrompt) {
             parameters.add("-noprompt");
         }
@@ -187,5 +196,13 @@ public class SOLRRunner {
         } catch (UnsupportedOperationException e) {
             // windows -.-
         }
+    }
+
+    public String getAdditionalVMParams() {
+        return additionalVMParams;
+    }
+
+    public void setAdditionalVMParams(String additionalVMParams) {
+        this.additionalVMParams = additionalVMParams;
     }
 }
