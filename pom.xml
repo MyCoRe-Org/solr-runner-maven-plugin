@@ -90,9 +90,9 @@
     <developer>
       <id>mcrshofm</id>
       <name>Sebastian Hofmann</name>
-      <email>vo62xat (at) uni-jena.de</email>
-      <organization>Friedrich-Schiller-Universität Jena, Thüringer Universitäts- und Landesbibliothek</organization>
-      <organizationUrl>http://www.thulb.uni-jena.de/</organizationUrl>
+      <email>sebastian.hofmann@gbv.de</email>
+      <organization>Verbundzentrale des Gemeinsamen Bibliotheksverbundes</organization>
+      <organizationUrl>https://www.gbv.de/</organizationUrl>
       <roles>
         <role>developer</role>
       </roles>
