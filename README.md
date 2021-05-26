@@ -1,7 +1,7 @@
 # solr-runner-maven-plugin
 
-This Plugin is just a wrapper for SOLR and some extra mojos. It downloads SOLR to the local repository 
-`~/.m2/repository/solr-7.7.3/`. It will be started from there but the Path to the solrHome will be changed with the 
+This plugin is just a wrapper for SOLR and some extra mojos. It downloads SOLR to the local repository 
+`~/.m2/repository/solr-7.7.3/`. It will be started from there, but the path to the solr home will be changed with the 
 solr -s parameter. 
 ```
 ~/.m2/repository/solr-7.7.3/bin/solr start -p 8983 -s ~/my-solr-location
@@ -16,7 +16,7 @@ Downloads SOLR to local repository and extract it, if it is not present already(
 <plugin>
   <groupId>org.mycore.plugins</groupId>
     <artifactId>solr-runner-maven-plugin</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.2-SNAPSHOT</version>
     <configuration>
       <!-- You can specify a custom SOLR mirror -->
       <solrMirrorURL>http://apache.mirror.iphh.net/lucene/solr/</solrMirrorURL>
@@ -52,7 +52,7 @@ Can be used to copy SOLR home template from your project files to solr home loca
 ```
 
 ## solr-runner:installSolrPlugins
-This can be used to install Plugins to specific cores in your SOLR home.
+This can be used to install plugins to specific cores in your SOLR home.
 You need to define a plugin dependency.
 ```
 <plugin>
@@ -77,7 +77,7 @@ You need to define a plugin dependency.
 </plugin>
 ```
 
-And then you need to map the Plugin to a specific Core.
+And then you need to map the plugin to a specific Core.
 ```
 ...
 <configuration>      
