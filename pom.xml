@@ -35,8 +35,8 @@
     <url>https://github.com/MyCoRe-Org/solr-runner-maven-plugin/issues</url>
   </issueManagement>
   <scm>
-    <connection>scm:git:https://github.com/MyCoRe-Org/solr-runner-maven-plugin.git</connection>
-    <developerConnection>scm:git:https://github.com/MyCoRe-Org/solr-runner-maven-plugin.git</developerConnection>
+    <connection>scm:git:${project.scm.url}</connection>
+    <developerConnection>scm:git:${project.scm.url}</developerConnection>
     <url>https://github.com/MyCoRe-Org/solr-runner-maven-plugin</url>
     <tag>HEAD</tag>
   </scm>
@@ -65,6 +65,13 @@
         <configuration>
           <source>1.8</source>
           <target>1.8</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <configuration>
+          <scmCommentPrefix>[ci skip]</scmCommentPrefix>
         </configuration>
       </plugin>
     </plugins>
