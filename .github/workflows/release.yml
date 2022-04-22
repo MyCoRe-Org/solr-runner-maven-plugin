@@ -23,6 +23,7 @@ jobs:
         env:
           JAVA_HOME: /usr/lib/jvm/java-11-openjdk/
         with:
+          maven-development-version-number: ${parsedVersion.majorVersion}.\${parsedVersion.nextMinorVersion}-SNAPSHOT
           git-release-bot-name: "release-bot"
           git-release-bot-email: "release-bot@mycore.org"
 
