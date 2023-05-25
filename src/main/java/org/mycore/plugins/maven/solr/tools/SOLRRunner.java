@@ -161,26 +161,24 @@ public class SOLRRunner {
         return waitAndOutput(solrProccess);
     }
 
-    public int start() throws IOException, InterruptedException {
+    public Process start() throws IOException, InterruptedException {
         fixPermissions();
 
-        Process solrProccess = new ProcessBuilder(buildParameterList("start")).redirectErrorStream(true).inheritIO()
+        return new ProcessBuilder(buildParameterList("start")).redirectErrorStream(true).inheritIO()
             .start();
-        return waitAndOutput(solrProccess);
     }
 
-    private int waitAndOutput(Process solrProccess) throws IOException, InterruptedException {
+    public int waitAndOutput(Process solrProccess) throws InterruptedException {
         int returnValue;
         returnValue = solrProccess.waitFor();
         return returnValue;
     }
 
-    public int stop() throws IOException, InterruptedException {
+    public Process stop() throws IOException, InterruptedException {
         fixPermissions();
 
-        Process solrProccess = new ProcessBuilder(buildParameterList("stop")).redirectErrorStream(true).inheritIO()
+        return new ProcessBuilder(buildParameterList("stop")).redirectErrorStream(true).inheritIO()
             .start();
-        return waitAndOutput(solrProccess);
     }
 
     public void fixPermissions() throws IOException {
