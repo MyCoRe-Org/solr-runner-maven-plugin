@@ -23,6 +23,8 @@ import org.mycore.plugins.maven.solr.tools.SOLRCoreReadyChecker;
 import org.mycore.plugins.maven.solr.tools.SOLRRunner;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -37,13 +39,21 @@ public class StartSOLRMojo extends AbstractSolrMojo {
     @Parameter(property = "coreReadyRetryWaitTimeInMillis", required = false, defaultValue = "1000")
     protected Integer coreReadyRetryWaitTimeInMillis;
 
+    /**
+     * If true, a shutdown hook will be registered to stop the SOLR instance when the JVM is terminated.
+     */
+    @Parameter(property = "shutdownHook", required = false, defaultValue = "false")
+    protected Boolean shutdownHook;
+
     public void execute() throws MojoExecutionException, MojoFailureException {
         setUpSolr();
         try {
             SOLRRunner runner = buildRunner();
             runner.setPort(this.solrPort);
 
-            if (runner.start() != 0) {
+            Process process = runner.start();
+            int result = runner.waitAndOutput(process);
+            if (result != 0) {
                 throw new MojoExecutionException("Solr command did not return 0. See Log for errors.");
             }
 
@@ -56,6 +66,28 @@ public class StartSOLRMojo extends AbstractSolrMojo {
             }
             readyChecker.setLog(getLog());
             readyChecker.waitForAllCoresReady();
+
+            if (this.shutdownHook != null && this.shutdownHook) {
+                getLog().info("Shutdown hook registered to stop SOLR when JVM is terminated.");
+                Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                    getLog().info("Check if SOLR is running...");
+                    try {
+                        readyChecker.setRetries(1);
+                        readyChecker.setLog(null);
+                        readyChecker.setRetryWaitTimeMS(0);
+                        readyChecker.waitForAllCoresReady();
+                    } catch (InterruptedException e) {
+                        getLog().info("SOLR is not running anymore.");
+                        return;
+                    }
+                    getLog().info("SOLR is still running. Stop it now.");
+                    try {
+                        runner.stop();
+                    } catch (IOException|InterruptedException e) {
+                        getLog().error("Error while stopping SOLR!", e);
+                    }
+                }));
+            }
         } catch (IOException | InterruptedException e) {
             throw new MojoFailureException("Error while starting SOLR!", e);
         }

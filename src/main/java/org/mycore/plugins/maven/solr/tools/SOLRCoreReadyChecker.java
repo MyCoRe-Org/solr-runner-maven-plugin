@@ -52,7 +52,7 @@ public class SOLRCoreReadyChecker {
     }
 
     public void waitForAllCoresReady() throws InterruptedException {
-        if(log != null) {
+        if(log != null){
             log.info("Waiting for all cores to be ready...");
         }
         int tries;
@@ -69,7 +69,9 @@ public class SOLRCoreReadyChecker {
 
                             JsonObject rootObject = root.getAsJsonObject();
                             if (allCoresReady(rootObject)) {
-                                log.info("All cores are ready.");
+                                if(log != null){
+                                    log.info("All cores are ready.");
+                                }
                                 return;
                             } else {
                                 if (log != null) {
@@ -84,7 +86,9 @@ public class SOLRCoreReadyChecker {
                     log.info("SOLR not ready yet, waiting...");
                 }
             } finally {
-                Thread.sleep(retryWaitTimeMS);
+                if(retryWaitTimeMS > 0){
+                    Thread.sleep(retryWaitTimeMS);
+                }
             }
         }
         throw new InterruptedException(
