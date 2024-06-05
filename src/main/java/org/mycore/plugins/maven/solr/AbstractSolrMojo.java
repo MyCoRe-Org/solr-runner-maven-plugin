@@ -62,6 +62,12 @@ abstract class AbstractSolrMojo extends AbstractMojo {
 
     @Parameter(property = "force", required = false, defaultValue = "false") protected Boolean force;
 
+    @Parameter(property = "cloudMode", required = false, defaultValue = "false")
+    protected Boolean cloudMode;
+
+    @Parameter(property = "securityJsonContent", required = false)
+    protected String securityJsonContent = null;
+
     protected void setUpSolr() throws MojoFailureException {
         if (!isSOLRExecutableExisting()) {
             if (!isSOLRZipExisting()) {
@@ -149,6 +155,7 @@ abstract class AbstractSolrMojo extends AbstractMojo {
         solrRunner.setAdditionalVMParams(additionalVMParam);
         solrRunner.setForeground(false);
         solrRunner.setSolrHome(this.getSOLRHome().toString());
+        solrRunner.setCloudMode(this.cloudMode);
         return solrRunner;
     }
 

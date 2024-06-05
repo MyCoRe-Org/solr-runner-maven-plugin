@@ -21,6 +21,7 @@ package org.mycore.plugins.maven.solr.tools;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -48,10 +49,13 @@ public class SOLRRunner {
     // -a param
     private String additionalVMParams;
 
+    private boolean cloudMode = false;
+
     // -noprompt flag
     private boolean noPrompt = true;
 
     private boolean force = false;
+    private boolean verbose = false;
 
     public SOLRRunner(Path executable) {
         this.executable = executable;
@@ -101,12 +105,16 @@ public class SOLRRunner {
         this.force = force;
     }
 
+    public boolean isCloudMode() {
+        return cloudMode;
+    }
+
+    public void setCloudMode(boolean cloudMode) {
+        this.cloudMode = cloudMode;
+    }
+
     protected List<String> buildParameterList(String... operation) {
-        ArrayList<String> parameters = new ArrayList<>();
-
-        parameters.add(this.executable.toString());
-
-        parameters.addAll(Arrays.stream(operation).collect(Collectors.toList()));
+        ArrayList<String> parameters = getRawParameters(operation);
 
         if (isForeground()) {
             parameters.add("-f");
@@ -136,6 +144,10 @@ public class SOLRRunner {
             parameters.add(additionalVMParams);
         }
 
+        if (isCloudMode() && Arrays.stream(operation).noneMatch("-c"::equals)) {
+            parameters.add("-c");
+        }
+
         if (noPrompt) {
             parameters.add("-noprompt");
         }
@@ -144,7 +156,38 @@ public class SOLRRunner {
             parameters.add("-force");
         }
 
+        if (verbose) {
+            parameters.add("-v");
+        }
+
         return parameters;
+    }
+
+    public ArrayList<String> getRawParameters(String... operation) {
+        ArrayList<String> parameters = new ArrayList<>();
+
+        parameters.add(this.executable.toString());
+
+        parameters.addAll(Arrays.stream(operation).collect(Collectors.toList()));
+        return parameters;
+    }
+
+    public int uploadSecurityJson() throws IOException, InterruptedException {
+        //  zk cp $secruity_json zk:security.json -z localhost:9983
+        String securityJsonPath = (this.solrHome.endsWith("/") ? this.solrHome : this.solrHome + "/") + "security.json";
+
+        if (!Files.exists(Paths.get(securityJsonPath))) {
+            return 0;
+        }
+
+        final List<String> uploadSecurityJsonParameterList = getRawParameters("zk", "cp",
+            securityJsonPath, "zk:security.json", "-z", "localhost:" + (getPort() + 1000));
+
+        Process solrProccess = new ProcessBuilder(uploadSecurityJsonParameterList)
+            .redirectErrorStream(true)
+            .inheritIO()
+            .start();
+        return waitAndOutput(solrProccess);
     }
 
     public int installCore(String coreName, String configSet) throws IOException, InterruptedException {
@@ -204,5 +247,9 @@ public class SOLRRunner {
 
     public void setAdditionalVMParams(String additionalVMParams) {
         this.additionalVMParams = additionalVMParams;
+    }
+
+    public void setVerbose(boolean verbose) {
+        this.verbose = verbose;
     }
 }

@@ -64,6 +64,14 @@ public class SOLRCoreReadyChecker {
                     if (entity != null) {
                         try (InputStream is = entity.getContent();
                             InputStreamReader isr = new InputStreamReader(is, StandardCharsets.UTF_8)) {
+
+                            if(response.getStatusLine().getStatusCode() == 401){
+                                log.info("SOLR requires authentication, skipping readiness check and wait " +
+                                        "5 seconds.");
+                                Thread.sleep(5000);
+                                return;
+                            }
+
                             JsonStreamParser parser = new JsonStreamParser(isr);
                             JsonElement root = parser.next();
 
@@ -113,7 +121,7 @@ public class SOLRCoreReadyChecker {
             if (log != null) {
                 log.debug("No cores found");
             }
-            return false;
+            return true; // no cores is a valid state and means that solr is ready
         }
 
         return coreEntries.stream()

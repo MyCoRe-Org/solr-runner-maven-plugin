@@ -18,15 +18,14 @@
 
 package org.mycore.plugins.maven.solr;
 
-import org.apache.maven.plugins.annotations.Parameter;
-import org.mycore.plugins.maven.solr.tools.SOLRCoreReadyChecker;
-import org.mycore.plugins.maven.solr.tools.SOLRRunner;
-
 import java.io.IOException;
 
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.mycore.plugins.maven.solr.tools.SOLRCoreReadyChecker;
+import org.mycore.plugins.maven.solr.tools.SOLRRunner;
 
 @Mojo(name = "start")
 public class StartSOLRMojo extends AbstractSolrMojo {
@@ -37,11 +36,15 @@ public class StartSOLRMojo extends AbstractSolrMojo {
     @Parameter(property = "coreReadyRetryWaitTimeInMillis", required = false, defaultValue = "1000")
     protected Integer coreReadyRetryWaitTimeInMillis;
 
+    @Parameter(property = "verbose", required = false, defaultValue = "false")
+    protected boolean verbose;
+
     public void execute() throws MojoExecutionException, MojoFailureException {
         setUpSolr();
         try {
             SOLRRunner runner = buildRunner();
             runner.setPort(this.solrPort);
+            runner.setVerbose(verbose);
 
             if (runner.start() != 0) {
                 throw new MojoExecutionException("Solr command did not return 0. See Log for errors.");
@@ -56,6 +59,12 @@ public class StartSOLRMojo extends AbstractSolrMojo {
             }
             readyChecker.setLog(getLog());
             readyChecker.waitForAllCoresReady();
+
+            if(this.cloudMode) {
+                runner.uploadSecurityJson();
+            }
+
+
         } catch (IOException | InterruptedException e) {
             throw new MojoFailureException("Error while starting SOLR!", e);
         }
