@@ -18,10 +18,7 @@
 
 package org.mycore.plugins.maven.solr;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-
+import com.jcraft.jsch.Session;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -30,12 +27,14 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.TransportCommand;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.transport.JschConfigSessionFactory;
-import org.eclipse.jgit.transport.OpenSshConfig;
 import org.eclipse.jgit.transport.SshTransport;
 import org.eclipse.jgit.transport.Transport;
+import org.eclipse.jgit.transport.ssh.jsch.JschConfigSessionFactory;
+import org.eclipse.jgit.transport.ssh.jsch.OpenSshConfig;
 
-import com.jcraft.jsch.Session;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 @Mojo(name = "installConfigSet")
 public class InstallConfigSet extends AbstractSolrMojo {
