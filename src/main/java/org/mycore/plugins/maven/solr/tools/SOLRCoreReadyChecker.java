@@ -21,16 +21,15 @@ package org.mycore.plugins.maven.solr.tools;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonStreamParser;
-import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.maven.plugin.logging.Log;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Set;
@@ -57,35 +56,33 @@ public class SOLRCoreReadyChecker {
         }
         int tries;
         for (tries = 0; tries < retries; tries++) {
-            try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
-                try (CloseableHttpResponse response = client
-                    .execute(new HttpGet(buildCoresURL()))) {
-                    HttpEntity entity = response.getEntity();
-                    if (entity != null) {
-                        try (InputStream is = entity.getContent();
-                            InputStreamReader isr = new InputStreamReader(is, StandardCharsets.UTF_8)) {
+            try (HttpClient client = HttpClient.newHttpClient()) {
+                HttpRequest onlineRequest = HttpRequest.newBuilder()
+                    .uri(URI.create(buildCoresURL())).build();
+                HttpResponse<InputStream> response = client.send(onlineRequest,
+                    HttpResponse.BodyHandlers.ofInputStream());
+                try (InputStream is = response.body();
+                    InputStreamReader isr = new InputStreamReader(is, StandardCharsets.UTF_8)) {
 
-                            if(response.getStatusLine().getStatusCode() == 401){
-                                log.info("SOLR requires authentication, skipping readiness check and wait " +
-                                        "5 seconds.");
-                                Thread.sleep(5000);
-                                return;
-                            }
+                    if (response.statusCode() == 401) {
+                        log.info("SOLR requires authentication, skipping readiness check and wait " +
+                            "5 seconds.");
+                        Thread.sleep(5000);
+                        return;
+                    }
 
-                            JsonStreamParser parser = new JsonStreamParser(isr);
-                            JsonElement root = parser.next();
+                    JsonStreamParser parser = new JsonStreamParser(isr);
+                    JsonElement root = parser.next();
 
-                            JsonObject rootObject = root.getAsJsonObject();
-                            if (allCoresReady(rootObject)) {
-                                log.info("All cores are ready.");
-                                return;
-                            } else {
-                                if (log != null) {
-                                    log.info("SOLR not ready yet, waiting...");
-                                }
+                    JsonObject rootObject = root.getAsJsonObject();
+                    if (allCoresReady(rootObject)) {
+                        log.info("All cores are ready.");
+                        return;
+                    } else {
+                        if (log != null) {
+                            log.info("SOLR not ready yet, waiting...");
                             }
                         }
-                    }
                 }
             } catch (IOException ex) {
                 if (log != null) {

@@ -18,38 +18,51 @@
 
 package org.mycore.plugins.maven.solr;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.List;
-import java.util.Locale;
-import java.util.stream.Collectors;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-
-import org.apache.maven.artifact.repository.ArtifactRepository;
+import org.apache.commons.compress.archivers.ArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.eclipse.aether.RepositorySystemSession;
 import org.mycore.plugins.maven.solr.tools.SOLRRunner;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.FileTime;
+import java.nio.file.attribute.PosixFileAttributeView;
+import java.nio.file.attribute.PosixFilePermission;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.stream.Collectors;
 
 abstract class AbstractSolrMojo extends AbstractMojo {
 
-    @Parameter(defaultValue = "${localRepository}", readonly = true, required = true)
-    private ArtifactRepository localRepository;
+    @Parameter(defaultValue = "${repositorySystemSession}", readonly = true, required = true)
+    private RepositorySystemSession repositorySystemSession;
 
-    @Parameter(property = "solrMirror", defaultValue = "http://apache.mirror.iphh.net/lucene/solr/")
-    private URL solrMirrorURL;
+    @Parameter(property = "solrMirror", defaultValue = "https://dlcdn.apache.org/")
+    private URI solrMirrorURL;
 
-    @Parameter(property = "solrVersion", defaultValue = "7.3.1")
+    @Parameter(property = "solrArchive", defaultValue = "https://archive.apache.org/dist/")
+    private URI solrArchiveURL;
+
+    @Parameter(property = "solrVersion", defaultValue = "9.6.1")
     private String solrVersionString;
 
     @Parameter(property = "additionalVMParam", defaultValue = "-XX:+IgnoreUnrecognizedVMOptions")
@@ -71,56 +84,107 @@ abstract class AbstractSolrMojo extends AbstractMojo {
     protected void setUpSolr() throws MojoFailureException {
         if (!isSOLRExecutableExisting()) {
             if (!isSOLRZipExisting()) {
-                getLog().debug("Download solr-zip because it does not exists!");
-                downloadZip();
+                getLog().debug("Download " + getSolrTgzFileName() + " because it does not exists!");
+                downloadTGZ();
             }
-            extractSOLRZip();
+            extractSolrTgz();
         }
     }
 
-    protected void downloadZip() throws MojoFailureException {
-        String file = solrMirrorURL.getFile();
+    protected void downloadTGZ() throws MojoFailureException {
+        String solrTgzFileName = getSolrTgzFileName();
+        String downloadPath = getDownloadPath();
+        URI mirrorURI = solrMirrorURL.resolve(downloadPath + solrTgzFileName);
 
-        if (!file.endsWith("/")) {
-            file += "/";
-        }
-
-        String solrZipFileName = getSOLRZipFileName();
-        try {
-            URL url = buildNewURL(solrMirrorURL, file + solrVersionString + "/" + solrZipFileName);
-
-            try (InputStream is = url.openStream()) {
-                Path zipPath = getZipPath();
-                getLog().info("Downloading " + url.toString() + " to " + zipPath.toString());
-                Files.copy(is, zipPath, StandardCopyOption.REPLACE_EXISTING);
+        List<Exception> supressed = new ArrayList<>();
+        Path tgzPath = getTGZPath();
+        try (HttpClient downloader = HttpClient.newBuilder()
+            .followRedirects(HttpClient.Redirect.NORMAL)
+            .build()) {
+            HttpRequest downloadRequest = HttpRequest.newBuilder().uri(mirrorURI).build();
+            HttpResponse<InputStream> response = null;
+            try {
+                getLog().debug("Downloading " + downloadRequest.uri());
+                response = downloader.send(downloadRequest, HttpResponse.BodyHandlers.ofInputStream());
+                if (response.statusCode() != 200) {
+                    getLog().info("Apache mirror does not provide selected SOLR version.");
+                    response = null;
+                }
             } catch (IOException e) {
-                throw new MojoFailureException("Error while downloading!", e);
+                getLog().error(e.getMessage());
+                supressed.add(e);
             }
-        } catch (MalformedURLException e) {
-            throw new MojoFailureException("Could not build URL to download SOLR!", e);
+            if (response == null) {
+                URI archiveURI = solrArchiveURL.resolve(downloadPath + solrTgzFileName);
+                downloadRequest = HttpRequest.newBuilder().uri(archiveURI).build();
+                getLog().debug("Downloading " + downloadRequest.uri());
+                response = downloader.send(downloadRequest, HttpResponse.BodyHandlers.ofInputStream());
+                if (response.statusCode() != 200) {
+                    throw new MojoFailureException("Could not download selected SOLR version: " + solrVersionString);
+                }
+            }
+            try (InputStream is = response.body()) {
+                getLog().info("Downloading " + response.uri() + " to " + tgzPath.toString());
+                Files.copy(is, tgzPath, StandardCopyOption.REPLACE_EXISTING);
+                FileTime lastModified = getLastModifiedFileTime(response);
+                if (lastModified != null) {
+                    Files.setLastModifiedTime(tgzPath, lastModified);
+                }
+            } catch (IOException e) {
+                getLog().error(e.getMessage());
+                supressed.add(e);
+            }
+        } catch (InterruptedException | IOException e) {
+            getLog().error(e.getMessage());
+            supressed.add(e);
+        }
+        if (!supressed.isEmpty()) {
+            MojoFailureException e = new MojoFailureException("Could not download or extract SOLR archive.");
+            supressed.forEach(e::addSuppressed);
+            throw e;
         }
     }
+
+    public FileTime getLastModifiedFileTime(HttpResponse<?> response) {
+        String lastModified = response.headers().firstValue("Last-Modified").orElse(null);
+        if (lastModified == null) {
+            return null;
+        }
+        try {
+            ZonedDateTime dateTime = ZonedDateTime.parse(lastModified, DateTimeFormatter.RFC_1123_DATE_TIME);
+            return FileTime.from(dateTime.toInstant());
+        } catch (DateTimeParseException e) {
+            getLog().warn("Failed to parse the Last-Modified header", e);
+            return null;
+        }
+    }
+
 
     protected boolean isSOLRZipExisting() throws MojoFailureException {
-        Path solrZipFilePath = getZipPath();
-        getLog().debug("Checking if solr zip exists: " + solrZipFilePath.toString());
-        return Files.exists(solrZipFilePath);
+        Path solrTGZPath = getTGZPath();
+        getLog().debug("Checking if SOLR archive exists: " + solrTGZPath.toString());
+        return Files.exists(solrTGZPath);
     }
 
     protected boolean isSOLRExecutableExisting() throws MojoFailureException {
         return Files.exists(getSOLRExecutablePath());
     }
 
-    protected void extractSOLRZip() throws MojoFailureException {
+    protected void extractSolrTgz() throws MojoFailureException {
         Log log = getLog();
         Path solrPath = getSOLRPath();
         String solrFolderName = getSOLRFolderName();
-        log.info("Extracting " + getZipPath() + " to " + solrPath + " \u2026");
+        log.info("Extracting " + getTGZPath() + " to " + solrPath + " \u2026");
 
-        try (ZipFile zipFile = new ZipFile(getZipPath().toFile())) {
-            List<? extends ZipEntry> zipEntries = zipFile.stream().collect(Collectors.toList());
-            // use for loop for easy error handling
-            for (ZipEntry entry : zipEntries) {
+        try (InputStream is = Files.newInputStream(getTGZPath());
+            TarArchiveInputStream tar = new TarArchiveInputStream(new GzipCompressorInputStream(is))) {
+            Files.createDirectories(solrPath);
+            ArchiveEntry entry;
+            while ((entry = tar.getNextEntry()) != null) {
+                if (!(entry instanceof TarArchiveEntry tarEntry)) {
+                    throw new IllegalStateException(
+                        "Not a tar entry: " + entry.getName() + " " + entry.getClass().getName());
+                }
                 String name = entry.getName();
 
                 if (name.startsWith(solrFolderName)) {
@@ -135,18 +199,46 @@ abstract class AbstractSolrMojo extends AbstractMojo {
 
                 if (entry.isDirectory()) {
                     Files.createDirectories(target);
+                    applyAttributes(target, tarEntry);
                 } else {
                     log.debug("Extract file: " + name);
-                    try (InputStream is = zipFile.getInputStream(entry)) {
-                        Files.copy(is, target, StandardCopyOption.REPLACE_EXISTING);
-                    } catch (IOException e) {
-                        throw new MojoFailureException("Error while extracting :" + name);
-                    }
+                    Files.createDirectories(target.getParent());
+                    Files.copy(tar, target, StandardCopyOption.REPLACE_EXISTING);
+                    applyAttributes(target, tarEntry);
                 }
             }
         } catch (IOException e) {
-            throw new MojoFailureException("Error while reading ZIP-File!");
+            throw new MojoFailureException("Error while reading TGZ-File!", e);
         }
+    }
+
+    private void applyAttributes(Path target, TarArchiveEntry tarEntry) throws IOException {
+        PosixFileAttributeView posixAttributes = Files.getFileAttributeView(target, PosixFileAttributeView.class);
+        if (posixAttributes != null) {
+            posixAttributes.setPermissions(mapToPosixFilePermissions(tarEntry));
+        }
+        Files.setLastModifiedTime(target, tarEntry.getLastModifiedTime());
+    }
+
+    private static EnumSet<PosixFilePermission> mapToPosixFilePermissions(TarArchiveEntry entry) {
+        int mode = entry.getMode();
+        return EnumSet.allOf(PosixFilePermission.class).stream()
+            .filter(permission -> (mode & getPermissionBit(permission)) != 0)
+            .collect(Collectors.toCollection(() -> EnumSet.noneOf(PosixFilePermission.class)));
+    }
+
+    private static int getPermissionBit(PosixFilePermission permission) {
+        return switch (permission) {
+            case OWNER_READ -> 0400;
+            case OWNER_WRITE -> 0200;
+            case OWNER_EXECUTE -> 0100;
+            case GROUP_READ -> 0040;
+            case GROUP_WRITE -> 0020;
+            case GROUP_EXECUTE -> 0010;
+            case OTHERS_READ -> 0004;
+            case OTHERS_WRITE -> 0002;
+            case OTHERS_EXECUTE -> 0001;
+        };
     }
 
     protected SOLRRunner buildRunner() throws MojoFailureException {
@@ -175,16 +267,16 @@ abstract class AbstractSolrMojo extends AbstractMojo {
         return solr;
     }
 
-    private Path getZipPath() throws MojoFailureException {
-        return getLocalRepoPath().resolve(getSOLRZipFileName());
+    private Path getTGZPath() throws MojoFailureException {
+        return getLocalRepoPath().resolve(getSolrTgzFileName());
     }
 
     public Path getSOLRPath() throws MojoFailureException {
         return getLocalRepoPath().resolve(getSOLRFolderName());
     }
 
-    private String getSOLRZipFileName() {
-        return "solr-" + solrVersionString + ".zip";
+    private String getSolrTgzFileName() {
+        return "solr-" + solrVersionString + ".tgz";
     }
 
     private String getSOLRFolderName() {
@@ -192,14 +284,17 @@ abstract class AbstractSolrMojo extends AbstractMojo {
     }
 
     public Path getLocalRepoPath() throws MojoFailureException {
-        try {
-            return Paths.get(new URL(localRepository.getUrl()).toURI());
-        } catch (MalformedURLException | URISyntaxException e) {
-            throw new MojoFailureException("Could not resolve path to local .m2", e);
-        }
+        return repositorySystemSession.getLocalRepository().getBasedir().toPath();
     }
 
-    private URL buildNewURL(URL base, String file) throws MalformedURLException {
-        return new URL(base.getProtocol(), base.getHost(), file);
+    private String getDownloadPath() {
+        String[] versionParts = solrVersionString.split("\\.");
+        int majorVersion = Integer.parseInt(versionParts[0]);
+        String prefix = switch (majorVersion) {
+            case 1, 2, 3, 4, 5, 7, 8 -> "lucene/solr/";
+            default -> "solr/solr/";
+        };
+        return prefix + solrVersionString + "/";
     }
+
 }
