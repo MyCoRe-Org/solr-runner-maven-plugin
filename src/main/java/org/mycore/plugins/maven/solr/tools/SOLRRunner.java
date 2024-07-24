@@ -191,8 +191,6 @@ public class SOLRRunner {
     }
 
     public int installCore(String coreName, String configSet) throws IOException, InterruptedException {
-        fixPermissions();
-
         final List<String> createCoreParameterList = buildParameterList("create", "-d", configSet, "-c", coreName);
 
         createCoreParameterList.remove("-noprompt");
@@ -205,8 +203,6 @@ public class SOLRRunner {
     }
 
     public int start() throws IOException, InterruptedException {
-        fixPermissions();
-
         Process solrProccess = new ProcessBuilder(buildParameterList("start")).redirectErrorStream(true).inheritIO()
             .start();
         return waitAndOutput(solrProccess);
@@ -219,26 +215,9 @@ public class SOLRRunner {
     }
 
     public int stop() throws IOException, InterruptedException {
-        fixPermissions();
-
         Process solrProccess = new ProcessBuilder(buildParameterList("stop")).redirectErrorStream(true).inheritIO()
             .start();
         return waitAndOutput(solrProccess);
-    }
-
-    public void fixPermissions() throws IOException {
-        try {
-            Set<PosixFilePermission> filePermissions = Files.getPosixFilePermissions(executable);
-            Stream<PosixFilePermission> requiredPermissions = Stream
-                .of(PosixFilePermission.OWNER_EXECUTE, PosixFilePermission.GROUP_EXECUTE);
-
-            requiredPermissions.forEach(requiredPermission -> {
-                filePermissions.add(requiredPermission);
-            });
-            Files.setPosixFilePermissions(executable, filePermissions);
-        } catch (UnsupportedOperationException e) {
-            // windows -.-
-        }
     }
 
     public String getAdditionalVMParams() {
