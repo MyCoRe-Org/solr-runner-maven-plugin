@@ -209,9 +209,7 @@ public class SOLRRunner {
     }
 
     private int waitAndOutput(Process solrProccess) throws IOException, InterruptedException {
-        int returnValue;
-        returnValue = solrProccess.waitFor();
-        return returnValue;
+        return solrProccess.waitFor();
     }
 
     public int stop() throws IOException, InterruptedException {

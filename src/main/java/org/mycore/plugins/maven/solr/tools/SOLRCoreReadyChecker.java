@@ -21,16 +21,14 @@ package org.mycore.plugins.maven.solr.tools;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonStreamParser;
+import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Set;
 
@@ -50,7 +48,7 @@ public class SOLRCoreReadyChecker {
         log = null;
     }
 
-    public void waitForAllCoresReady() throws InterruptedException {
+    public void waitForAllCoresReady() throws InterruptedException, MojoExecutionException {
         if(log != null) {
             log.info("Waiting for all cores to be ready...");
         }
@@ -59,30 +57,34 @@ public class SOLRCoreReadyChecker {
             try (HttpClient client = HttpClient.newHttpClient()) {
                 HttpRequest onlineRequest = HttpRequest.newBuilder()
                     .uri(URI.create(buildCoresURL())).build();
-                HttpResponse<InputStream> response = client.send(onlineRequest,
-                    HttpResponse.BodyHandlers.ofInputStream());
-                try (InputStream is = response.body();
-                    InputStreamReader isr = new InputStreamReader(is, StandardCharsets.UTF_8)) {
+                HttpResponse<String> response = client.send(onlineRequest,
+                    HttpResponse.BodyHandlers.ofString());
 
-                    if (response.statusCode() == 401) {
-                        log.info("SOLR requires authentication, skipping readiness check and wait " +
-                            "5 seconds.");
-                        Thread.sleep(5000);
-                        return;
-                    }
+                if (response.statusCode() == 401) {
+                    log.info("SOLR requires authentication, skipping readiness check and wait " +
+                        "5 seconds.");
+                    Thread.sleep(5000);
+                    return;
+                }
+                if (response.statusCode() == 404) {
+                    throw new MojoExecutionException(
+                        "Could not get SOLR core states (" + onlineRequest.uri() + "). 404:\n" + response.body());
+                }
 
-                    JsonStreamParser parser = new JsonStreamParser(isr);
-                    JsonElement root = parser.next();
+                JsonStreamParser parser = new JsonStreamParser(response.body());
+                JsonElement root = parser.next();
 
+                try {
                     JsonObject rootObject = root.getAsJsonObject();
                     if (allCoresReady(rootObject)) {
                         log.info("All cores are ready.");
                         return;
-                    } else {
-                        if (log != null) {
-                            log.info("SOLR not ready yet, waiting...");
-                            }
-                        }
+                    } else if (log != null) {
+                        log.info("SOLR not ready yet, waiting...");
+                    }
+                } catch (RuntimeException e) {
+                    log.warn("Could not parse JSON document from SOLR (response code:" + response.statusCode() + "):\n"
+                        + response.body());
                 }
             } catch (IOException ex) {
                 if (log != null) {
