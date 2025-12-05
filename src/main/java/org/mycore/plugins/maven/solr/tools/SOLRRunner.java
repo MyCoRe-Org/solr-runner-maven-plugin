@@ -51,7 +51,7 @@ public class SOLRRunner {
 
     private boolean cloudMode = false;
 
-    // -noprompt flag
+    // --no-prompt flag
     private boolean noPrompt = true;
 
     private boolean force = false;
@@ -149,7 +149,7 @@ public class SOLRRunner {
         }
 
         if (noPrompt) {
-            parameters.add("-noprompt");
+            parameters.add("--no-prompt");
         }
 
         if (force) {
@@ -193,7 +193,7 @@ public class SOLRRunner {
     public int installCore(String coreName, String configSet) throws IOException, InterruptedException {
         final List<String> createCoreParameterList = buildParameterList("create", "-d", configSet, "-c", coreName);
 
-        createCoreParameterList.remove("-noprompt");
+        createCoreParameterList.remove("--no-prompt");
 
         Process solrProccess = new ProcessBuilder(createCoreParameterList)
             .redirectErrorStream(true)

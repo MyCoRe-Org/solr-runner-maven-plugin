@@ -62,7 +62,7 @@ abstract class AbstractSolrMojo extends AbstractMojo {
     @Parameter(property = "solrArchive", defaultValue = "https://archive.apache.org/dist/")
     private URI solrArchiveURL;
 
-    @Parameter(property = "solrVersion", defaultValue = "9.6.1")
+    @Parameter(property = "solrVersion", defaultValue = "9.8.1")
     private String solrVersionString;
 
     @Parameter(property = "additionalVMParam", defaultValue = "-XX:+IgnoreUnrecognizedVMOptions")
