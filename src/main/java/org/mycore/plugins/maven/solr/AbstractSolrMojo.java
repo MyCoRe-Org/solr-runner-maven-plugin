@@ -254,7 +254,6 @@ abstract class AbstractSolrMojo extends AbstractMojo {
         if (this.additionalParams != null && !this.additionalParams.isEmpty()) {
             solrRunner.setAdditionalParams(this.additionalParams);
         }
-        solrRunner.setNoPrompt(noPrompt);
 
         return solrRunner;
     }
