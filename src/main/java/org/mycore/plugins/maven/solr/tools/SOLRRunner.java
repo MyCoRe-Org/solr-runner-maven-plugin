@@ -22,11 +22,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -55,7 +53,10 @@ public class SOLRRunner {
     private boolean noPrompt = true;
 
     private boolean force = false;
+
     private boolean verbose = false;
+
+    private String additionalParams;
 
     public SOLRRunner(Path executable) {
         this.executable = executable;
@@ -160,6 +161,11 @@ public class SOLRRunner {
             parameters.add("-v");
         }
 
+        if(this.additionalParams != null && !this.additionalParams.isEmpty()) {
+            Stream<String> additionalParams = Arrays.stream(this.additionalParams.split(" "));
+            parameters.addAll(additionalParams.toList());
+        }
+
         return parameters;
     }
 
@@ -228,5 +234,9 @@ public class SOLRRunner {
 
     public void setVerbose(boolean verbose) {
         this.verbose = verbose;
+    }
+
+    public void setAdditionalParams(String additionalParams) {
+        this.additionalParams = additionalParams;
     }
 }

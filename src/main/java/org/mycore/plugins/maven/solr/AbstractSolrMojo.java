@@ -68,6 +68,9 @@ abstract class AbstractSolrMojo extends AbstractMojo {
     @Parameter(property = "additionalVMParam", defaultValue = "-XX:+IgnoreUnrecognizedVMOptions")
     private String additionalVMParam;
 
+    @Parameter(property = "additionalParam", required = false)
+    private String additionalParams;
+
     @Parameter(property = "solrHome", required = false)
     private File solrHome;
 
@@ -248,6 +251,10 @@ abstract class AbstractSolrMojo extends AbstractMojo {
         solrRunner.setForeground(false);
         solrRunner.setSolrHome(this.getSOLRHome().toString());
         solrRunner.setCloudMode(this.cloudMode);
+        if (this.additionalParams != null && !this.additionalParams.isEmpty()) {
+            solrRunner.setAdditionalParams(this.additionalParams);
+        }
+
         return solrRunner;
     }
 
