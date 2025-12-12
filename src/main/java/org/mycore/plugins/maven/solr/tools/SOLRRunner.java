@@ -49,7 +49,7 @@ public class SOLRRunner {
 
     private boolean cloudMode = false;
 
-    // -noprompt flag
+    // --no-prompt flag
     private boolean noPrompt = true;
 
     private boolean force = false;
@@ -57,6 +57,12 @@ public class SOLRRunner {
     private boolean verbose = false;
 
     private String additionalParams;
+
+    private String solrVersion;
+
+    private static final String NO_PROMPT_FLAG_OLD = "-noprompt";
+
+    private static final String NO_PROMPT_FLAG_NEW = "--no-prompt";
 
     public SOLRRunner(Path executable) {
         this.executable = executable;
@@ -114,6 +120,14 @@ public class SOLRRunner {
         this.cloudMode = cloudMode;
     }
 
+    public String getSolrVersion() {
+        return solrVersion;
+    }
+
+    public void setSolrVersion(String solrVersion) {
+        this.solrVersion = solrVersion;
+    }
+
     protected List<String> buildParameterList(String... operation) {
         ArrayList<String> parameters = getRawParameters(operation);
 
@@ -150,7 +164,7 @@ public class SOLRRunner {
         }
 
         if (noPrompt) {
-            parameters.add("-noprompt");
+            parameters.add(getNoPromptFlag(solrVersion));
         }
 
         if (force) {
@@ -199,7 +213,7 @@ public class SOLRRunner {
     public int installCore(String coreName, String configSet) throws IOException, InterruptedException {
         final List<String> createCoreParameterList = buildParameterList("create", "-d", configSet, "-c", coreName);
 
-        createCoreParameterList.remove("-noprompt");
+        createCoreParameterList.remove(getNoPromptFlag(solrVersion));
 
         Process solrProccess = new ProcessBuilder(createCoreParameterList)
             .redirectErrorStream(true)
@@ -238,5 +252,30 @@ public class SOLRRunner {
 
     public void setAdditionalParams(String additionalParams) {
         this.additionalParams = additionalParams;
+    }
+
+    /**
+     * The no-prompt flag was changed in SOLR version 9.7 without backwards-compatibility.
+     * To assure the plugin still runs with all SOLR versions, the flag is adjusted to the SOLR version.
+     * For unparsable versions and null, the newer flag "--no-prompt" will be used.
+     * @param solrVersion the used SOLR version
+     * @return the String of the no-prompt flag
+     */
+    private String getNoPromptFlag(String solrVersion) {
+        if (solrVersion == null) {
+            return NO_PROMPT_FLAG_NEW;
+        }
+        try {
+            String[] versionParts = solrVersion.split("\\.");
+            int majorVersion = Integer.parseInt(versionParts[0]);
+            int minorVersion = Integer.parseInt(versionParts[1]);
+            // everything up to SOLR 9.6.x
+            if ((majorVersion < 9) || (majorVersion == 9 && minorVersion <= 6)) {
+                return NO_PROMPT_FLAG_OLD;
+            }
+            return NO_PROMPT_FLAG_NEW;
+        } catch (Exception e) {
+            return NO_PROMPT_FLAG_NEW;
+        }
     }
 }
