@@ -30,6 +30,7 @@
   <artifactId>solr-runner-maven-plugin</artifactId>
   <version>1.5-SNAPSHOT</version>
   <packaging>maven-plugin</packaging>
+  <name>solr-runner-maven-plugin</name>
   <issueManagement>
     <system>GitHub Issues</system>
     <url>https://github.com/MyCoRe-Org/solr-runner-maven-plugin/issues</url>
