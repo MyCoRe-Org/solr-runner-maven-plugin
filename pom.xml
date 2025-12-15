@@ -28,7 +28,7 @@
   </parent>
   <groupId>org.mycore.plugins</groupId>
   <artifactId>solr-runner-maven-plugin</artifactId>
-  <version>1.5</version>
+  <version>1.6-SNAPSHOT</version>
   <packaging>maven-plugin</packaging>
   <name>solr-runner-maven-plugin</name>
   <issueManagement>
@@ -39,7 +39,7 @@
     <connection>scm:git:https://github.com/MyCoRe-Org/solr-runner-maven-plugin.git</connection>
     <developerConnection>scm:git:https://github.com/MyCoRe-Org/solr-runner-maven-plugin.git</developerConnection>
     <url>https://github.com/MyCoRe-Org/solr-runner-maven-plugin</url>
-    <tag>v1.5</tag>
+    <tag>HEAD</tag>
   </scm>
   <properties>
     <java.target.version>21</java.target.version>
