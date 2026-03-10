@@ -137,30 +137,37 @@ public class SOLRRunner {
 
         Integer port = getPort();
         if (port != null) {
-            parameters.add("-p");
+            parameters.add("--port");
             parameters.add(port.toString());
         }
 
         String solrHome = getSolrHome();
         if (solrHome != null) {
-            parameters.add("-s");
+            parameters.add("--solr-home");
             parameters.add(solrHome);
         }
 
         String memory = getMemory();
         if (memory != null) {
-            parameters.add("-m");
+            parameters.add("--memory");
             parameters.add(memory);
         }
 
         String additionalVMParams = getAdditionalVMParams();
         if (additionalVMParams != null) {
-            parameters.add("-a");
+            parameters.add("--jvm-opts");
             parameters.add(additionalVMParams);
         }
 
-        if (isCloudMode() && Arrays.stream(operation).noneMatch("-c"::equals)) {
-            parameters.add("-c");
+        if (getMajorVersion() < 10) {
+            if (isCloudMode() && Arrays.stream(operation).noneMatch("-c"::equals)) {
+                parameters.add("-c");
+            }
+        } else {
+            if (!isCloudMode() && Arrays.stream(operation).noneMatch("--user-managed"::equals)) {
+                parameters.add("--user-managed");
+                parameters.remove("-c");
+            }
         }
 
         if (noPrompt) {
@@ -168,11 +175,11 @@ public class SOLRRunner {
         }
 
         if (force) {
-            parameters.add("-force");
+            parameters.add("--force");
         }
 
         if (verbose) {
-            parameters.add("-v");
+            parameters.add("--verbose");
         }
 
         if(this.additionalParams != null && !this.additionalParams.isEmpty()) {
@@ -276,6 +283,20 @@ public class SOLRRunner {
             return NO_PROMPT_FLAG_NEW;
         } catch (Exception e) {
             return NO_PROMPT_FLAG_NEW;
+        }
+    }
+
+    private int getMajorVersion() {
+        if (getSolrVersion() == null) {
+            throw new IllegalStateException("Cannot determine major version of SOLR, because solrVersion is null");
+        }
+        try {
+            String[] versionParts = getSolrVersion().split("\\.");
+            return Integer.parseInt(versionParts[0]);
+        } catch (Exception e) {
+            throw new IllegalStateException(
+                "Cannot determine major version of SOLR from solrVersion: " + getSolrVersion(),
+                e);
         }
     }
 }
